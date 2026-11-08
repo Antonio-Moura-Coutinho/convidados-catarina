@@ -85,7 +85,10 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 .admin ul{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:6px}
 .admin li{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;overflow-wrap:anywhere}
 .inline{display:flex;gap:8px;flex-wrap:wrap}
-.inline input{flex:1 1 220px}
+.inline > input{flex:1 1 220px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap}
+.filtros .search{flex:1 1 220px;width:auto}
+.filtros select{flex:0 1 220px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 .small{font-size:13px;color:var(--muted)}
 .who:disabled{cursor:default;color:inherit;opacity:1}
 .pill:disabled{cursor:default;opacity:1}
@@ -116,7 +119,10 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
       <div class="stat"><b id="st-conv">–</b><span>convites enviados</span></div>
     </section>
     <div class="tools">
-      <input class="search" id="q" type="search" placeholder="Procurar nome…" aria-label="Procurar nome">
+      <div class="filtros">
+        <input class="search" id="q" type="search" placeholder="Procurar nome…" aria-label="Procurar nome">
+        <select id="fEnv" aria-label="Filtrar por quem envia"><option value="">Todos os que enviam</option></select>
+      </div>
       <div class="chips" id="chips" role="group" aria-label="Filtrar por situação"></div>
     </div>
     <p class="msg" id="msg">A carregar a lista…</p>
@@ -156,6 +162,8 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
       <label style="flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink)"><input type="checkbox" id="f-std" style="width:20px;height:20px"> Save the date enviado</label>
       <label style="flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink)"><input type="checkbox" id="f-conv" style="width:20px;height:20px"> Convite enviado</label>
     </div>
+    <label>Enviado por (quem envia o convite)<input id="f-env" list="membros" autocomplete="off" placeholder="ex.: Mãe, António…"></label>
+    <datalist id="membros"></datalist>
     <label>Observações<textarea id="f-obs" rows="2"></textarea></label>
     <div class="acts">
       <button class="btn del" type="button" id="delBtn">Apagar</button>
@@ -206,15 +214,18 @@ function render(){
   $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
   $("st-dec").textContent = sum("Não sei") + sum("Dúvida"); $("st-no").textContent = sum("Não vai");
   $("st-std").textContent = rows.filter(r=>r.std==="Sim").length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim").length;
-  const q = norm($("q").value.trim());
-  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!q || norm(r.c1+" "+r.c2+" "+r.obs).includes(q))));
+  const q = norm($("q").value.trim()), fe = $("fEnv").value;
+  const membros = [...new Set(rows.map(r=>(r.env||"").trim()).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b)));
+  const sel = $("fEnv"); sel.replaceChildren(new Option("Todos os que enviam", ""), new Option("Sem ninguém atribuído", "__nenhum"), ...membros.map(m=>new Option(m, m))); sel.value = fe;
+  $("membros").replaceChildren(...membros.map(m=>{ const o=document.createElement("option"); o.value=m; return o; }));
+  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!fe || (fe==="__nenhum" ? !(r.env||"").trim() : (r.env||"").trim()===fe)) && (!q || norm(r.c1+" "+r.c2+" "+r.obs+" "+(r.env||"")).includes(q))));
   const ul=$("list"); ul.replaceChildren();
   $("msg").hidden = vis.length>0; if(!vis.length) $("msg").textContent = rows.length ? "Ninguém corresponde a esta pesquisa." : "Ainda não há convidados.";
   for(const r of vis){
     const li=document.createElement("li"); li.className="row";
     const who=document.createElement("button"); who.type="button"; who.className="who";
     const st=document.createElement("strong"); st.textContent = r.c2 ? `${r.c1} & ${r.c2}` : r.c1;
-    const sm=document.createElement("small"); sm.textContent = [r.cat, `${pessoas(r)} ${pessoas(r)===1?"pessoa":"pessoas"}`, r.obs].filter(Boolean).join(" · ");
+    const sm=document.createElement("small"); sm.textContent = [r.cat, `${pessoas(r)} ${pessoas(r)===1?"pessoa":"pessoas"}`, r.env ? `envia: ${r.env}` : "", r.obs].filter(Boolean).join(" · ");
     const tags=document.createElement("span"); tags.className="tags";
     [["Save the date", r.std], ["Convite", r.conv]].forEach(([t,v])=>{ const g=document.createElement("span"); g.className="tag"+(v==="Sim"?" on":""); g.textContent = (v==="Sim"?"✓ ":"✗ ")+t; tags.appendChild(g); });
     who.append(st, sm, tags); who.onclick=()=>abrir(r); who.disabled=!podeEditar;
@@ -235,15 +246,15 @@ function abrir(r){
   if(!podeEditar) return;
   editId = r ? r.id : null;
   $("dlgTitle").textContent = r ? "Editar convidado" : "Novo convidado";
-  $("f-c1").value = r?.c1||""; $("f-c2").value = r?.c2||""; $("f-cat").value = r?.cat||"Convidados"; $("f-obs").value = r?.obs||""; $("f-std").checked = r?.std==="Sim"; $("f-conv").checked = r?.conv==="Sim";
+  $("f-c1").value = r?.c1||""; $("f-c2").value = r?.c2||""; $("f-cat").value = r?.cat||"Convidados"; $("f-obs").value = r?.obs||""; $("f-std").checked = r?.std==="Sim"; $("f-env").value = r?.env||""; $("f-conv").checked = r?.conv==="Sim";
   sitSel = r?.sit || "A confirmar"; renderSitOpts(); $("delBtn").hidden = !r; $("dlg").showModal();
 }
 $("cancelBtn").onclick=()=>$("dlg").close();
 $("addBtn").onclick=()=>abrir(null);
-$("q").oninput=render;
+$("q").oninput=render; $("fEnv").onchange=render;
 $("form").onsubmit = async e => {
   e.preventDefault();
-  const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, cat:$("f-cat").value, obs:$("f-obs").value.trim(), std:$("f-std").checked?"Sim":"Não", conv:$("f-conv").checked?"Sim":"Não", atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
+  const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, cat:$("f-cat").value, obs:$("f-obs").value.trim(), std:$("f-std").checked?"Sim":"Não", conv:$("f-conv").checked?"Sim":"Não", env:$("f-env").value.trim(), atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
   if(!data.c1) return;
   try{ editId ? await setDoc(doc(db,"convidados",editId), data) : await addDoc(collection(db,"convidados"), data); $("dlg").close(); toast("Guardado"); }
   catch(err){ toast("Não foi possível guardar"); }
@@ -255,17 +266,17 @@ $("delBtn").onclick = async () => {
 
 $("xlBtn").onclick = () => {
   const ord = ordenar(rows), N = 1000;
-  const lista = [["Convidado 1","Convidado 2","Situação","Categoria","Save the date","Convite enviado","Observações","Total pessoas"]];
-  ord.forEach((r,i)=> lista.push([r.c1, r.c2||"", r.sit, r.cat, r.std||"Não", r.conv||"Não", r.obs||"", {t:"n", v:pessoas(r), f:`SUMPRODUCT(--(LEN(A${i+2}:B${i+2})>0))`}]));
+  const lista = [["Convidado 1","Convidado 2","Situação","Categoria","Save the date","Convite enviado","Enviado por","Observações","Total pessoas"]];
+  ord.forEach((r,i)=> lista.push([r.c1, r.c2||"", r.sit, r.cat, r.std||"Não", r.conv||"Não", r.env||"", r.obs||"", {t:"n", v:pessoas(r), f:`SUMPRODUCT(--(LEN(A${i+2}:B${i+2})>0))`}]));
   const ws1 = XLSX.utils.aoa_to_sheet(lista);
-  ws1["!cols"] = [{wch:26},{wch:24},{wch:14},{wch:13},{wch:13},{wch:14},{wch:30},{wch:12}];
-  ws1["!autofilter"] = {ref:`A1:H${ord.length+1}`};
+  ws1["!cols"] = [{wch:26},{wch:24},{wch:14},{wch:13},{wch:13},{wch:14},{wch:16},{wch:30},{wch:12}];
+  ws1["!autofilter"] = {ref:`A1:I${ord.length+1}`};
   const L = "'Lista de convidados'!", R = c => `${L}$${c}$2:$${c}$${N}`;
   const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
   const som = [["Festa dos 50 anos da Catarina",""],["Indicador","Total"],
     ["Grupos / linhas",{t:"n",v:rows.length,f:`COUNTA(${R("A")})`}],
-    ["Total de pessoas",{t:"n",v:rows.reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("H")})`}],
-    ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("H")})`}]),
+    ["Total de pessoas",{t:"n",v:rows.reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("I")})`}],
+    ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("I")})`}]),
     ["Prováveis (confirmados + a confirmar)",{t:"n",v:sum("Confirmado")+sum("A confirmar"),f:"B5+B6"}],
     ["Save the date enviados (grupos)",{t:"n",v:rows.filter(r=>r.std==="Sim").length,f:`COUNTIF(${R("E")},"Sim")`}],
     ["Convites enviados (grupos)",{t:"n",v:rows.filter(r=>r.conv==="Sim").length,f:`COUNTIF(${R("F")},"Sim")`}],
@@ -305,7 +316,7 @@ $("importFile").onchange = async ev => {
     const novos = linhas.map(l=>({ c1:limpa(l["Convidado 1"]), c2:limpa(l["Convidado 2"]),
       sit: ORDEM.includes(limpa(l["Situação"])) ? limpa(l["Situação"]) : "A confirmar",
       cat: limpa(l["Categoria"])==="Tios" ? "Tios" : "Convidados", obs: limpa(l["Observações"]),
-      std: limpa(l["Save the date"])==="Sim" ? "Sim" : "Não", conv: limpa(l["Convite enviado"])==="Sim" ? "Sim" : "Não" }))
+      std: limpa(l["Save the date"])==="Sim" ? "Sim" : "Não", conv: limpa(l["Convite enviado"])==="Sim" ? "Sim" : "Não", env: limpa(l["Enviado por"]) }))
       .map(r=> r.c1 ? r : {...r, c1:r.c2, c2:""}).filter(r=>r.c1);
     if(!novos.length){ toast("Não encontrei convidados no ficheiro"); return; }
     if(!confirm(`Importar ${novos.length} linhas e substituir a lista atual (${rows.length} linhas)?`)) return;
@@ -326,7 +337,7 @@ $("logout").onclick = () => signOut(auth);
 renderChips();
 
 onSnapshot(collection(db,"convidados"), snap => {
-  rows = snap.docs.map(d=>({id:d.id, c1:"", c2:"", sit:"A confirmar", cat:"Convidados", obs:"", std:"Não", conv:"Não", ...d.data()}));
+  rows = snap.docs.map(d=>({id:d.id, c1:"", c2:"", sit:"A confirmar", cat:"Convidados", obs:"", std:"Não", conv:"Não", env:"", ...d.data()}));
   $("xlBtn").hidden = false; render();
 }, () => { $("msg").hidden = false; $("msg").textContent = "Não foi possível carregar a lista."; });
 
