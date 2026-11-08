@@ -144,7 +144,7 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
         <label>Hora<input id="ev-hora" placeholder="20h00"></label>
         <label>Local<input id="ev-local" placeholder="Nome do sítio"></label>
         <label>Morada<input id="ev-morada" placeholder="Rua, localidade"></label>
-        <label>Traje<input id="ev-traje" placeholder="Black tie, cocktail…"></label>
+        <label>Dress code<input id="ev-traje" placeholder="Black tie, cocktail…"></label>
         <label>R.S.V.P. até<input id="ev-rsvpAte" placeholder="30 de novembro"></label>
         <label>Confirmações para<input id="ev-rsvpContacto" placeholder="Catarina · 91x xxx xxx"></label>
       </div>
@@ -258,8 +258,8 @@ async function desenharConvite(r){
   txt(ev("hora")?`às ${ev("hora")}`:"às [hora]",478,'500 19px "Cormorant Garamond", Georgia, serif');
   esp(ev("local")||"[Local]",512,'600 21px "Cormorant SC", Georgia, serif',2);
   txt(ev("morada")||"[Morada]",536,'500 17px "Cormorant Garamond", Georgia, serif');
-  x.textAlign="left"; x.font='600 16px "Cormorant SC", Georgia, serif'; x.fillText("Traje",56,724);
-  x.font='500 16px "Cormorant Garamond", Georgia, serif'; x.fillText(ev("traje")||"[Traje]",56,746);
+  x.textAlign="left"; x.font='600 16px "Cormorant SC", Georgia, serif'; x.fillText("Dress code",56,724);
+  x.font='500 16px "Cormorant Garamond", Georgia, serif'; x.fillText(ev("traje")||"[Dress code]",56,746);
   x.textAlign="right"; x.font='600 16px "Cormorant SC", Georgia, serif'; x.fillText(`R.S.V.P. até ${ev("rsvpAte")||"[data]"}`,W-56,724);
   x.font='500 16px "Cormorant Garamond", Georgia, serif'; x.fillText(ev("rsvpContacto")||"[Nome] · [Contacto]",W-56,746);
   return c;
