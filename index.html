@@ -57,6 +57,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .s-Nao-sei{background:var(--ns-bg);color:var(--ns)}
 .s-Duvida{background:var(--dv-bg);color:var(--dv)}
 .s-Nao-vai{background:var(--no-bg);color:var(--no)}
+.s-Nao-faz-sentido-convidar{background:var(--line);color:var(--muted)}
 .empty,.msg{text-align:center;color:var(--muted);padding:28px 8px}
 .add{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;min-height:48px}
 dialog{border:0;border-radius:16px;padding:0;width:min(520px,calc(100% - 24px));background:var(--card);color:var(--ink)}
@@ -110,10 +111,11 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 
   <div id="app">
     <section class="stats" aria-label="Resumo">
-      <div class="stat"><b id="st-total">–</b><span>pessoas</span></div>
+      <div class="stat"><b id="st-total">–</b><span>pessoas a convidar</span></div>
       <div class="stat"><b id="st-ok">–</b><span>confirmadas</span></div>
       <div class="stat"><b id="st-wait">–</b><span>a confirmar</span></div>
       <div class="stat"><b id="st-no">–</b><span>não vão</span></div>
+      <div class="stat"><b id="st-nf">–</b><span>não faz sentido convidar</span></div>
       <div class="stat"><b id="st-std">–</b><span>save the date enviados</span></div>
       <div class="stat"><b id="st-conv">–</b><span>convites enviados</span></div>
     </section>
@@ -217,7 +219,8 @@ const app = initializeApp({
 });
 const auth = getAuth(app), db = getFirestore(app);
 const DONOS = ["antonio.coutinho@improvebytech.com", "tonitrigueiros@gmail.com"];
-const ORDEM = ["Confirmado","A confirmar","Não vai"];
+const ORDEM = ["Confirmado","A confirmar","Não vai","Não faz sentido convidar"];
+const NF = "Não faz sentido convidar";
 const cls = s => "s-" + s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-");
 const norm = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const $ = id => document.getElementById(id);
@@ -286,10 +289,10 @@ function renderChips(){
 }
 function render(){
   const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
-  $("st-total").textContent = rows.reduce((a,r)=>a+pessoas(r),0);
+  $("st-total").textContent = rows.filter(r=>r.sit!==NF).reduce((a,r)=>a+pessoas(r),0);
   $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
-  $("st-no").textContent = sum("Não vai");
-  $("st-std").textContent = rows.filter(r=>r.std==="Sim").length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim").length;
+  $("st-no").textContent = sum("Não vai"); $("st-nf").textContent = sum(NF);
+  $("st-std").textContent = rows.filter(r=>r.std==="Sim"&&r.sit!==NF).length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim"&&r.sit!==NF).length;
   const q = norm($("q").value.trim()), fe = $("fEnv").value;
   const membros = [...new Set(rows.map(r=>(r.env||"").trim()).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b)));
   const sel = $("fEnv"); sel.replaceChildren(new Option("Todos os que enviam", ""), new Option("Sem ninguém atribuído", "__nenhum"), ...membros.map(m=>new Option(m, m))); sel.value = fe;
@@ -374,7 +377,7 @@ $("xlBtn").onclick = () => {
   const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
   const som = [["Festa dos 50 anos da Catarina",""],["Indicador","Total"],
     ["Grupos / linhas",{t:"n",v:rows.length,f:`COUNTA(${R("A")})`}],
-    ["Total de pessoas",{t:"n",v:rows.reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("I")})`}],
+    ["Total de pessoas a convidar",{t:"n",v:rows.filter(r=>r.sit!==NF).reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("I")})-SUMIF(${R("C")},"${NF}",${R("I")})`}],
     ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("I")})`}]),
     ["Prováveis (confirmados + a confirmar)",{t:"n",v:sum("Confirmado")+sum("A confirmar"),f:"B5+B6"}],
     ["Save the date enviados (grupos)",{t:"n",v:rows.filter(r=>r.std==="Sim").length,f:`COUNTIF(${R("E")},"Sim")`}],
