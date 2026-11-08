@@ -84,6 +84,7 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 .btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:11px 16px;font:inherit;cursor:pointer;min-height:44px}
 .btn.main{background:var(--navy);color:var(--bg);border-color:var(--navy);font-weight:600}
 .btn.del{color:var(--no);border-color:transparent;background:none}
+h2[tabindex="-1"]:focus{outline:none}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 
@@ -107,6 +108,47 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .tag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
 .tag.on{border-color:var(--gold);color:var(--ink)}
+.short{display:none}
+@media (max-width:600px){
+  .wrap{padding:10px 12px 100px}
+  header{padding:4px 0 10px}
+  .crest{width:34px;height:34px}
+  h1{font-size:30px}
+  .sub{font-size:14px}
+  .rule{margin-top:10px}
+  .xl{margin-top:10px;padding:7px 14px;min-height:38px;font-size:13px}
+  .top{font-size:12px;min-height:26px}
+  .stats{display:flex;overflow-x:auto;gap:8px;margin:12px -12px;padding:2px 12px 6px;scroll-snap-type:x mandatory;scroll-padding-inline:12px;scrollbar-width:none}
+  .stats::-webkit-scrollbar{display:none}
+  .stat{flex:0 0 auto;min-width:104px;padding:8px 10px;scroll-snap-align:start}
+  .stat b{font-size:24px}
+  .stat span{font-size:12px;display:block;line-height:1.25}
+  .tools{position:static;gap:8px;padding:0}
+  .filtros{gap:6px}
+  .filtros .search{flex:1 1 100%;padding:10px 12px}
+  .filtros select{flex:1 1 calc(50% - 3px);min-width:0;padding:10px 8px;font-size:14px}
+  .chips{margin:0 -12px;padding:0 12px 2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{padding:6px 11px;font-size:13px;min-height:36px}
+  .list{gap:6px}
+  .row{padding:9px 10px;gap:8px;border-radius:10px}
+  .who{padding:2px 0}
+  .who strong{font-size:15px;line-height:1.3}
+  .who small{font-size:12px}
+  .tags{gap:4px;margin-top:3px}
+  .tag{font-size:11px;padding:1px 7px}
+  .pill{padding:6px 10px;font-size:12px;min-height:34px}
+  .full{display:none}
+  .short{display:inline}
+  .add{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:12px 18px}
+  dialog{width:100%;max-width:100%;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:92dvh}
+  dialog .sheet{max-height:92dvh;overflow-y:auto;padding:16px 14px 0}
+  dialog .sheet h2{font-size:24px}
+  dialog .acts{position:sticky;bottom:0;background:var(--card);padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px));margin-top:6px;border-top:1px solid var(--line)}
+  .opts{grid-template-columns:1fr 1fr}
+  .opt{padding:9px 6px;font-size:14px}
+  .admin{padding:14px 12px}
+}
 </style>
 </head>
 <body>
@@ -174,7 +216,7 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 
 <dialog id="dlg" aria-labelledby="dlgTitle">
   <form class="sheet" method="dialog" id="form">
-    <h2 id="dlgTitle">Convidado</h2>
+    <h2 id="dlgTitle" tabindex="-1" autofocus>Convidado</h2>
     <label>Convidado 1<input id="f-c1" required autocomplete="off"></label>
     <label>Convidado 2 (acompanhante)<input id="f-c2" autocomplete="off"></label>
     <div>
@@ -204,7 +246,7 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
 
 <dialog id="prev" aria-labelledby="prevTitle">
   <div class="sheet">
-    <h2 id="prevTitle">Convite</h2>
+    <h2 id="prevTitle" tabindex="-1" autofocus>Convite</h2>
     <img id="prevImg" alt="Pré-visualização do convite" style="width:100%;border-radius:8px;border:1px solid var(--line)">
     <div class="acts">
       <button class="btn" type="button" id="prevClose">Fechar</button>
@@ -291,10 +333,12 @@ function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on")
 const pessoas = r => (r.c1?1:0) + (r.c2?1:0);
 const ordenar = a => [...a].sort((x,y)=> (ORDEM.indexOf(x.sit)-ORDEM.indexOf(y.sit)) || norm(x.c1).localeCompare(norm(y.c1)));
 
+const CURTO = {"Não faz sentido convidar":"Não convidar"};
+function rotulo(el, t){ const f=document.createElement("span"); f.className="full"; f.textContent=t; const c=document.createElement("span"); c.className="short"; c.textContent=CURTO[t]||t; el.replaceChildren(f,c); }
 function renderChips(){
   const c=$("chips"); c.replaceChildren();
   ["Todos",...ORDEM].forEach(s=>{
-    const b=document.createElement("button"); b.type="button"; b.className="chip"+(s==="Todos"?"":" "+cls(s)); b.textContent=s;
+    const b=document.createElement("button"); b.type="button"; b.className="chip"+(s==="Todos"?"":" "+cls(s)); rotulo(b, s);
     b.setAttribute("aria-pressed", String(filtro===s)); b.onclick=()=>{ filtro=s; renderChips(); render(); };
     c.appendChild(b);
   });
@@ -321,7 +365,7 @@ function render(){
     if(r.cat==="Tios"){ const t=document.createElement("span"); t.className="tag tio"; t.textContent="Tios"; tags.appendChild(t); }
     [["Save the date", r.std], ["Convite", r.conv]].forEach(([t,v])=>{ const g=document.createElement("span"); g.className="tag"+(v==="Sim"?" on":""); g.textContent = (v==="Sim"?"✓ ":"✗ ")+t; tags.appendChild(g); });
     who.append(st, sm, tags); who.onclick=()=>abrir(r); who.disabled=!podeEditar;
-    const pill=document.createElement("button"); pill.type="button"; pill.className="pill "+cls(r.sit); pill.textContent=r.sit;
+    const pill=document.createElement("button"); pill.type="button"; pill.className="pill "+cls(r.sit); rotulo(pill, r.sit);
     pill.setAttribute("aria-label", `Mudar situação de ${r.c1} (agora: ${r.sit})`); pill.onclick=()=>abrir(r); pill.disabled=!podeEditar;
     li.append(who,pill); ul.appendChild(li);
   }
