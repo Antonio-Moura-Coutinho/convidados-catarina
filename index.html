@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Convidados · 50 anos da Catarina</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f7f2e8; --card:#fffdf8; --ink:#1d2340; --muted:#5d6177; --line:#e4dccb; --gold:#9a7a2e; --navy:#1d2340;
+  --ok:#2f6b3f; --ok-bg:#dcefdf; --wait:#7a5a00; --wait-bg:#fbefc6; --ns:#8a4515; --ns-bg:#f9e0cf;
+  --dv:#1f4f80; --dv-bg:#dbe8f6; --no:#8f2424; --no-bg:#f5d3d3; --shadow:0 1px 2px rgba(29,35,64,.06),0 4px 14px rgba(29,35,64,.05);
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14172a; --card:#1c2038; --ink:#f1ead9; --muted:#b4b2bf; --line:#2e3352; --gold:#d6b46a; --navy:#f1ead9;
+  --ok:#9fd8ac; --ok-bg:#1f3a28; --wait:#f0d27a; --wait-bg:#3b3215; --ns:#f2b48b; --ns-bg:#41271a;
+  --dv:#a9cbf0; --dv-bg:#1d3048; --no:#f2a3a3; --no-bg:#432020; --shadow:none; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#14172a; --card:#1c2038; --ink:#f1ead9; --muted:#b4b2bf; --line:#2e3352; --gold:#d6b46a; --navy:#f1ead9;
+  --ok:#9fd8ac; --ok-bg:#1f3a28; --wait:#f0d27a; --wait-bg:#3b3215; --ns:#f2b48b; --ns-bg:#41271a;
+  --dv:#a9cbf0; --dv-bg:#1d3048; --no:#f2a3a3; --no-bg:#432020; --shadow:none; color-scheme:dark;}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 110px}
+header{text-align:center;padding:12px 0 18px}
+.crest{width:44px;height:44px;color:var(--gold)}
+h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:clamp(28px,6vw,38px);margin:4px 0 2px;letter-spacing:.01em}
+.sub{color:var(--muted);font-size:15px;margin:0}
+.xl{margin-top:14px;border:1px solid var(--gold);background:none;color:var(--ink);border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;min-height:42px}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto 0;max-width:280px;opacity:.7}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+.stat b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;line-height:1.1;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.tools{display:flex;flex-direction:column;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:14px;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--navy);color:var(--bg);border-color:var(--navy)}
+.list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+.who{flex:1;min-width:0;background:none;border:0;padding:4px 0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.who strong{display:block;font-weight:600;overflow-wrap:anywhere}
+.who small{color:var(--muted);font-size:13px}
+.pill{flex:none;border:0;border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:40px}
+.s-Confirmado{background:var(--ok-bg);color:var(--ok)}
+.s-A-confirmar{background:var(--wait-bg);color:var(--wait)}
+.s-Nao-sei{background:var(--ns-bg);color:var(--ns)}
+.s-Duvida{background:var(--dv-bg);color:var(--dv)}
+.s-Nao-vai{background:var(--no-bg);color:var(--no)}
+.empty,.msg{text-align:center;color:var(--muted);padding:28px 8px}
+.add{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;min-height:48px}
+dialog{border:0;border-radius:16px;padding:0;width:min(520px,calc(100% - 24px));background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(10,12,25,.45)}
+.sheet{padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.sheet h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;margin:0}
+label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.opt{border:2px solid transparent;border-radius:10px;padding:10px;font:inherit;font-weight:600;cursor:pointer;min-height:44px}
+.opt[aria-pressed="true"]{border-color:var(--ink)}
+.acts{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:4px}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:11px 16px;font:inherit;cursor:pointer;min-height:44px}
+.btn.main{background:var(--navy);color:var(--bg);border-color:var(--navy);font-weight:600}
+.btn.del{color:var(--no);border-color:transparent;background:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+[hidden]{display:none!important}
+.top{display:flex;justify-content:flex-end;gap:8px;align-items:center;font-size:13px;color:var(--muted);min-height:32px}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;cursor:pointer;padding:6px}
+.gate{max-width:420px;margin:30px auto;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 22px;box-shadow:var(--shadow)}
+.gate p{color:var(--muted)}
+.admin{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.admin h2{font-family:"Cormorant Garamond",Georgia,serif;margin:0 0 6px;font-size:24px}
+.admin ul{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:6px}
+.admin li{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;overflow-wrap:anywhere}
+.inline{display:flex;gap:8px;flex-wrap:wrap}
+.inline input{flex:1 1 220px}
+.small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top" id="topbar" hidden><span id="who"></span><button class="link" id="logout" type="button">Sair</button></div>
+  <header>
+    <svg class="crest" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 34c-4-6-4-14 1-20M38 34c4-6 4-14-1-20"/><path d="M11 18c3 0 4 2 4 4M9 25c3 0 4 2 4 4M37 18c-3 0-4 2-4 4M39 25c-3 0-4 2-4 4"/><path d="M17 15l3 4 4-6 4 6 3-4-1 9H18z"/><text x="24" y="38" text-anchor="middle" font-family="Cormorant Garamond,Georgia,serif" font-size="11" fill="currentColor" stroke="none">C</text></svg>
+    <h1>Lista de convidados</h1>
+    <p class="sub">Festa dos 50 anos da Catarina</p>
+    <div class="rule"></div>
+    <button class="xl" id="xlBtn" type="button" hidden>Descarregar Excel</button>
+  </header>
+
+  <section class="gate" id="gate">
+    <p id="gateMsg">A verificar a sessão…</p>
+    <button class="btn main" id="loginBtn" type="button" hidden>Entrar com Google</button>
+  </section>
+
+  <div id="app" hidden>
+    <section class="stats" aria-label="Resumo">
+      <div class="stat"><b id="st-total">–</b><span>pessoas</span></div>
+      <div class="stat"><b id="st-ok">–</b><span>confirmadas</span></div>
+      <div class="stat"><b id="st-wait">–</b><span>a confirmar</span></div>
+      <div class="stat"><b id="st-dec">–</b><span>por decidir</span></div>
+      <div class="stat"><b id="st-no">–</b><span>não vão</span></div>
+    </section>
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="Procurar nome…" aria-label="Procurar nome">
+      <div class="chips" id="chips" role="group" aria-label="Filtrar por situação"></div>
+    </div>
+    <p class="msg" id="msg">A carregar a lista…</p>
+    <ul class="list" id="list"></ul>
+
+    <section class="admin" id="admin" hidden>
+      <h2>Gestão</h2>
+      <p class="small">Só tu vês esta parte. Quem estiver nesta lista pode ver e editar os convidados depois de entrar com a conta Google desse email.</p>
+      <ul id="emails"></ul>
+      <div class="inline">
+        <label style="flex:1 1 220px">Adicionar email com acesso<input id="newEmail" type="email" placeholder="nome@gmail.com" autocomplete="off"></label>
+        <button class="btn" id="addEmail" type="button" style="align-self:flex-end">Adicionar</button>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+      <p class="small">Importar do Excel: escolhe o ficheiro com a folha “Lista de convidados” (colunas Convidado 1, Convidado 2, Situação, Categoria, Observações). Substitui a lista atual.</p>
+      <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">Escolher ficheiro Excel…<input id="importFile" type="file" accept=".xlsx,.xlsm,.xls" hidden></label>
+    </section>
+  </div>
+</div>
+
+<button class="add" id="addBtn" type="button" hidden>+ Adicionar</button>
+<div class="toast" id="toast" role="status"></div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form class="sheet" method="dialog" id="form">
+    <h2 id="dlgTitle">Convidado</h2>
+    <label>Convidado 1<input id="f-c1" required autocomplete="off"></label>
+    <label>Convidado 2 (acompanhante)<input id="f-c2" autocomplete="off"></label>
+    <div>
+      <span style="font-size:13px;color:var(--muted)">Situação</span>
+      <div class="opts" id="f-sit" role="group" aria-label="Situação"></div>
+    </div>
+    <label>Categoria
+      <select id="f-cat"><option>Convidados</option><option>Tios</option><option>Família</option></select>
+    </label>
+    <label>Observações<textarea id="f-obs" rows="2"></textarea></label>
+    <div class="acts">
+      <button class="btn del" type="button" id="delBtn">Apagar</button>
+      <span style="display:flex;gap:8px">
+        <button class="btn" type="button" id="cancelBtn">Cancelar</button>
+        <button class="btn main" type="submit" id="saveBtn">Guardar</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, getDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDgG0qyndjS1QOxbI3-_IwtJG1NkeqnxII",
+  authDomain: "convidados-catarina.firebaseapp.com",
+  projectId: "convidados-catarina",
+  storageBucket: "convidados-catarina.firebasestorage.app",
+  messagingSenderId: "271811404328",
+  appId: "1:271811404328:web:5b914ac27ba0faa48b4b1d"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const DONOS = ["antonio.coutinho@improvebytech.com", "tonitrigueiros@gmail.com"];
+const ORDEM = ["Confirmado","A confirmar","Não sei","Dúvida","Não vai"];
+const cls = s => "s-" + s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-");
+const norm = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const $ = id => document.getElementById(id);
+let rows = [], filtro = "Todos", editId = null, sitSel = "A confirmar", unsub = [], acesso = [];
+
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2000); }
+const pessoas = r => (r.c1?1:0) + (r.c2?1:0);
+const ordenar = a => [...a].sort((x,y)=> (ORDEM.indexOf(x.sit)-ORDEM.indexOf(y.sit)) || norm(x.c1).localeCompare(norm(y.c1)));
+
+function renderChips(){
+  const c=$("chips"); c.replaceChildren();
+  ["Todos",...ORDEM].forEach(s=>{
+    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=s;
+    b.setAttribute("aria-pressed", String(filtro===s)); b.onclick=()=>{ filtro=s; renderChips(); render(); };
+    c.appendChild(b);
+  });
+}
+function render(){
+  const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
+  $("st-total").textContent = rows.reduce((a,r)=>a+pessoas(r),0);
+  $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
+  $("st-dec").textContent = sum("Não sei") + sum("Dúvida"); $("st-no").textContent = sum("Não vai");
+  const q = norm($("q").value.trim());
+  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!q || norm(r.c1+" "+r.c2+" "+r.obs).includes(q))));
+  const ul=$("list"); ul.replaceChildren();
+  $("msg").hidden = vis.length>0; if(!vis.length) $("msg").textContent = rows.length ? "Ninguém corresponde a esta pesquisa." : "Ainda não há convidados.";
+  for(const r of vis){
+    const li=document.createElement("li"); li.className="row";
+    const who=document.createElement("button"); who.type="button"; who.className="who";
+    const st=document.createElement("strong"); st.textContent = r.c2 ? `${r.c1} & ${r.c2}` : r.c1;
+    const sm=document.createElement("small"); sm.textContent = [r.cat, r.obs].filter(Boolean).join(" · ");
+    who.append(st, sm); who.onclick=()=>abrir(r);
+    const pill=document.createElement("button"); pill.type="button"; pill.className="pill "+cls(r.sit); pill.textContent=r.sit;
+    pill.setAttribute("aria-label", `Mudar situação de ${r.c1} (agora: ${r.sit})`); pill.onclick=()=>abrir(r);
+    li.append(who,pill); ul.appendChild(li);
+  }
+}
+function renderSitOpts(){
+  const box=$("f-sit"); box.replaceChildren();
+  ORDEM.forEach(s=>{
+    const b=document.createElement("button"); b.type="button"; b.className="opt "+cls(s); b.textContent=s;
+    b.setAttribute("aria-pressed", String(sitSel===s)); b.onclick=()=>{ sitSel=s; renderSitOpts(); };
+    box.appendChild(b);
+  });
+}
+function abrir(r){
+  editId = r ? r.id : null;
+  $("dlgTitle").textContent = r ? "Editar convidado" : "Novo convidado";
+  $("f-c1").value = r?.c1||""; $("f-c2").value = r?.c2||""; $("f-cat").value = r?.cat||"Convidados"; $("f-obs").value = r?.obs||"";
+  sitSel = r?.sit || "A confirmar"; renderSitOpts(); $("delBtn").hidden = !r; $("dlg").showModal();
+}
+$("cancelBtn").onclick=()=>$("dlg").close();
+$("addBtn").onclick=()=>abrir(null);
+$("q").oninput=render;
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, cat:$("f-cat").value, obs:$("f-obs").value.trim(), atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
+  if(!data.c1) return;
+  try{ editId ? await setDoc(doc(db,"convidados",editId), data) : await addDoc(collection(db,"convidados"), data); $("dlg").close(); toast("Guardado"); }
+  catch(err){ toast("Não foi possível guardar"); }
+};
+$("delBtn").onclick = async () => {
+  if(!editId || !confirm("Apagar este convidado da lista?")) return;
+  try{ await deleteDoc(doc(db,"convidados",editId)); $("dlg").close(); toast("Apagado"); } catch(err){ toast("Não foi possível apagar"); }
+};
+
+$("xlBtn").onclick = () => {
+  const ord = ordenar(rows), N = 1000;
+  const lista = [["Convidado 1","Convidado 2","Situação","Categoria","Observações","Total pessoas"]];
+  ord.forEach((r,i)=> lista.push([r.c1, r.c2||"", r.sit, r.cat, r.obs||"", {t:"n", v:pessoas(r), f:`SUMPRODUCT(--(LEN(A${i+2}:B${i+2})>0))`}]));
+  const ws1 = XLSX.utils.aoa_to_sheet(lista);
+  ws1["!cols"] = [{wch:26},{wch:24},{wch:14},{wch:13},{wch:30},{wch:12}];
+  ws1["!autofilter"] = {ref:`A1:F${ord.length+1}`};
+  const L = "'Lista de convidados'!", R = c => `${L}$${c}$2:$${c}$${N}`;
+  const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
+  const som = [["Festa dos 50 anos da Catarina",""],["Indicador","Total"],
+    ["Grupos / linhas",{t:"n",v:rows.length,f:`COUNTA(${R("A")})`}],
+    ["Total de pessoas",{t:"n",v:rows.reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("F")})`}],
+    ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("F")})`}]),
+    ["Prováveis (confirmados + a confirmar)",{t:"n",v:sum("Confirmado")+sum("A confirmar"),f:"B5+B6"}],
+    ["",""],["Exportado em", new Date().toLocaleString("pt-PT")]];
+  const ws2 = XLSX.utils.aoa_to_sheet(som); ws2["!cols"]=[{wch:40},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, "Lista de convidados"); XLSX.utils.book_append_sheet(wb, ws2, "Somatórios");
+  const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  XLSX.writeFile(wb, `Convidados Catarina ${stamp}.xlsx`);
+};
+
+function renderEmails(){
+  const ul=$("emails"); ul.replaceChildren();
+  if(!acesso.length){ const li=document.createElement("li"); li.textContent="Ainda ninguém além de ti."; ul.appendChild(li); }
+  acesso.forEach(e=>{
+    const li=document.createElement("li"); const s=document.createElement("span"); s.textContent=e;
+    const b=document.createElement("button"); b.type="button"; b.className="btn del"; b.textContent="Remover";
+    b.onclick=()=>guardarAcesso(acesso.filter(x=>x!==e)); li.append(s,b); ul.appendChild(li);
+  });
+}
+async function guardarAcesso(lista){
+  try{ await setDoc(doc(db,"config","acesso"), {emails: lista}); toast("Acessos atualizados"); }
+  catch(err){ toast("Não foi possível atualizar os acessos"); }
+}
+$("addEmail").onclick = () => {
+  const e = $("newEmail").value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ toast("Email inválido"); return; }
+  if(!acesso.includes(e)) guardarAcesso([...acesso, e]); $("newEmail").value="";
+};
+$("importFile").onchange = async ev => {
+  const f = ev.target.files[0]; ev.target.value=""; if(!f) return;
+  try{
+    const wb = XLSX.read(await f.arrayBuffer());
+    const ws = wb.Sheets["Lista de convidados"] || wb.Sheets[wb.SheetNames[0]];
+    const linhas = XLSX.utils.sheet_to_json(ws, {defval:""});
+    const limpa = v => String(v??"").replace(/\s+/g," ").trim();
+    const novos = linhas.map(l=>({ c1:limpa(l["Convidado 1"]), c2:limpa(l["Convidado 2"]),
+      sit: ORDEM.includes(limpa(l["Situação"])) ? limpa(l["Situação"]) : "A confirmar",
+      cat: limpa(l["Categoria"]) || "Convidados", obs: limpa(l["Observações"]) }))
+      .map(r=> r.c1 ? r : {...r, c1:r.c2, c2:""}).filter(r=>r.c1);
+    if(!novos.length){ toast("Não encontrei convidados no ficheiro"); return; }
+    if(!confirm(`Importar ${novos.length} linhas e substituir a lista atual (${rows.length} linhas)?`)) return;
+    const atuais = await getDocs(collection(db,"convidados"));
+    let batch = writeBatch(db), n = 0;
+    const flush = async () => { await batch.commit(); batch = writeBatch(db); n = 0; };
+    for(const d of atuais.docs){ batch.delete(d.ref); if(++n>=400) await flush(); }
+    const agora = new Date().toISOString();
+    for(const r of novos){ batch.set(doc(collection(db,"convidados")), {...r, atualizado:agora, por:auth.currentUser.email}); if(++n>=400) await flush(); }
+    if(n) await flush();
+    toast(`${novos.length} linhas importadas`);
+  }catch(err){ console.error(err); toast("Não foi possível importar"); }
+};
+
+$("loginBtn").onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(()=>toast("Não foi possível entrar"));
+$("logout").onclick = () => signOut(auth);
+renderChips();
+
+onAuthStateChanged(auth, user => {
+  unsub.forEach(u=>u()); unsub = []; rows = [];
+  $("app").hidden = true; $("addBtn").hidden = true; $("xlBtn").hidden = true; $("admin").hidden = true;
+  if(!user){
+    $("topbar").hidden = true; $("gate").hidden = false; $("loginBtn").hidden = false;
+    $("gateMsg").textContent = "Entra com a tua conta Google para ver a lista."; return;
+  }
+  $("topbar").hidden = false; $("who").textContent = user.email; $("loginBtn").hidden = true;
+  $("gateMsg").textContent = "A carregar…";
+  const dono = DONOS.includes((user.email||"").toLowerCase());
+  unsub.push(onSnapshot(collection(db,"convidados"), snap => {
+    rows = snap.docs.map(d=>({id:d.id, c1:"", c2:"", sit:"A confirmar", cat:"Convidados", obs:"", ...d.data()}));
+    $("gate").hidden = true; $("app").hidden = false; $("addBtn").hidden = false; $("xlBtn").hidden = false; render();
+  }, () => {
+    $("gate").hidden = false; $("app").hidden = true;
+    $("gateMsg").textContent = `A conta ${user.email} ainda não tem acesso. Pede ao António para adicionar este email.`;
+  }));
+  if(dono){
+    $("admin").hidden = false;
+    unsub.push(onSnapshot(doc(db,"config","acesso"), s => { acesso = (s.exists() && s.data().emails) || []; renderEmails(); }, () => {}));
+  }
+});
+</script>
+</body>
+</html>
