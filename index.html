@@ -13,19 +13,22 @@
 <style>
 :root{
   --bg:#f7f2e8; --card:#fffdf8; --ink:#1d2340; --muted:#5d6177; --line:#e4dccb; --gold:#9a7a2e; --navy:#1d2340;
-  --ok:#2f6b3f; --ok-bg:#dcefdf; --wait:#7a5a00; --wait-bg:#fbefc6; --ns:#8a4515; --ns-bg:#f9e0cf;
-  --dv:#1f4f80; --dv-bg:#dbe8f6; --no:#8f2424; --no-bg:#f5d3d3; --shadow:0 1px 2px rgba(29,35,64,.06),0 4px 14px rgba(29,35,64,.05);
+  --ok:#1e6b47; --ok-bg:#e1f2e8; --ok-line:#9fd1b4; --wait:#8a5a00; --wait-bg:#fdf1d6; --wait-line:#e8c574;
+  --no:#9b2335; --no-bg:#f9e1e4; --no-line:#e7a3ad; --nf:#556070; --nf-bg:#eceef2; --nf-line:#c4c9d3;
+  --tio:#7a5c14; --tio-bg:#f6ecd2; --shadow:0 1px 2px rgba(29,35,64,.06),0 4px 14px rgba(29,35,64,.05);
   color-scheme:light;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#14172a; --card:#1c2038; --ink:#f1ead9; --muted:#b4b2bf; --line:#2e3352; --gold:#d6b46a; --navy:#f1ead9;
-  --ok:#9fd8ac; --ok-bg:#1f3a28; --wait:#f0d27a; --wait-bg:#3b3215; --ns:#f2b48b; --ns-bg:#41271a;
-  --dv:#a9cbf0; --dv-bg:#1d3048; --no:#f2a3a3; --no-bg:#432020; --shadow:none; color-scheme:dark;}}
+  --ok:#8fd9ae; --ok-bg:#183527; --ok-line:#2f6b4c; --wait:#f2cf7a; --wait-bg:#3a2f12; --wait-line:#6e5a22;
+  --no:#f2a7b1; --no-bg:#3d1c22; --no-line:#7a3440; --nf:#b7bdc9; --nf-bg:#262b40; --nf-line:#3c4362;
+  --tio:#e6c77d; --tio-bg:#3a3018; --shadow:none; color-scheme:dark;}}
 :root[data-theme="dark"]{
   --bg:#14172a; --card:#1c2038; --ink:#f1ead9; --muted:#b4b2bf; --line:#2e3352; --gold:#d6b46a; --navy:#f1ead9;
-  --ok:#9fd8ac; --ok-bg:#1f3a28; --wait:#f0d27a; --wait-bg:#3b3215; --ns:#f2b48b; --ns-bg:#41271a;
-  --dv:#a9cbf0; --dv-bg:#1d3048; --no:#f2a3a3; --no-bg:#432020; --shadow:none; color-scheme:dark;}
+  --ok:#8fd9ae; --ok-bg:#183527; --ok-line:#2f6b4c; --wait:#f2cf7a; --wait-bg:#3a2f12; --wait-line:#6e5a22;
+  --no:#f2a7b1; --no-bg:#3d1c22; --no-line:#7a3440; --nf:#b7bdc9; --nf-bg:#262b40; --nf-line:#3c4362;
+  --tio:#e6c77d; --tio-bg:#3a3018; --shadow:none; color-scheme:dark;}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -52,12 +55,20 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .who strong{display:block;font-weight:600;overflow-wrap:anywhere}
 .who small{color:var(--muted);font-size:13px}
 .pill{flex:none;border:0;border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:40px}
-.s-Confirmado{background:var(--ok-bg);color:var(--ok)}
-.s-A-confirmar{background:var(--wait-bg);color:var(--wait)}
-.s-Nao-sei{background:var(--ns-bg);color:var(--ns)}
-.s-Duvida{background:var(--dv-bg);color:var(--dv)}
-.s-Nao-vai{background:var(--no-bg);color:var(--no)}
-.s-Nao-faz-sentido-convidar{background:var(--line);color:var(--muted)}
+.s-Confirmado{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+.s-A-confirmar{background:var(--wait-bg);color:var(--wait);border:1px solid var(--wait-line)}
+.s-Nao-vai{background:var(--no-bg);color:var(--no);border:1px solid var(--no-line)}
+.s-Nao-faz-sentido-convidar{background:var(--nf-bg);color:var(--nf);border:1px solid var(--nf-line)}
+.pill{display:inline-flex;align-items:center;gap:6px}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.chip.s-Confirmado,.chip.s-A-confirmar,.chip.s-Nao-vai,.chip.s-Nao-faz-sentido-convidar{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.chip.s-Confirmado[aria-pressed="true"]{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.chip.s-A-confirmar[aria-pressed="true"]{background:var(--wait-bg);color:var(--wait);border-color:var(--wait)}
+.chip.s-Nao-vai[aria-pressed="true"]{background:var(--no-bg);color:var(--no);border-color:var(--no)}
+.chip.s-Nao-faz-sentido-convidar[aria-pressed="true"]{background:var(--nf-bg);color:var(--nf);border-color:var(--nf)}
+.row.nf{opacity:.72}
+#st-ok{color:var(--ok)} #st-wait{color:var(--wait)} #st-no{color:var(--no)} #st-nf{color:var(--nf)}
+.tag.tio{background:var(--tio-bg);color:var(--tio);border-color:transparent;font-weight:600}
 .empty,.msg{text-align:center;color:var(--muted);padding:28px 8px}
 .add{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;min-height:48px}
 dialog{border:0;border-radius:16px;padding:0;width:min(520px,calc(100% - 24px));background:var(--card);color:var(--ink)}
@@ -122,6 +133,7 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
     <div class="tools">
       <div class="filtros">
         <input class="search" id="q" type="search" placeholder="Procurar nome…" aria-label="Procurar nome">
+        <select id="fCat" aria-label="Filtrar por categoria"><option value="">Todas as categorias</option><option value="Convidados">Convidados</option><option value="Tios">Tios</option></select>
         <select id="fEnv" aria-label="Filtrar por quem envia"><option value="">Todos os que enviam</option></select>
       </div>
       <div class="chips" id="chips" role="group" aria-label="Filtrar por situação"></div>
@@ -282,7 +294,7 @@ const ordenar = a => [...a].sort((x,y)=> (ORDEM.indexOf(x.sit)-ORDEM.indexOf(y.s
 function renderChips(){
   const c=$("chips"); c.replaceChildren();
   ["Todos",...ORDEM].forEach(s=>{
-    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=s;
+    const b=document.createElement("button"); b.type="button"; b.className="chip"+(s==="Todos"?"":" "+cls(s)); b.textContent=s;
     b.setAttribute("aria-pressed", String(filtro===s)); b.onclick=()=>{ filtro=s; renderChips(); render(); };
     c.appendChild(b);
   });
@@ -293,19 +305,20 @@ function render(){
   $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
   $("st-no").textContent = sum("Não vai"); $("st-nf").textContent = sum(NF);
   $("st-std").textContent = rows.filter(r=>r.std==="Sim"&&r.sit!==NF).length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim"&&r.sit!==NF).length;
-  const q = norm($("q").value.trim()), fe = $("fEnv").value;
+  const q = norm($("q").value.trim()), fe = $("fEnv").value, fc = $("fCat").value;
   const membros = [...new Set(rows.map(r=>(r.env||"").trim()).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b)));
   const sel = $("fEnv"); sel.replaceChildren(new Option("Todos os que enviam", ""), new Option("Sem ninguém atribuído", "__nenhum"), ...membros.map(m=>new Option(m, m))); sel.value = fe;
   $("membros").replaceChildren(...membros.map(m=>{ const o=document.createElement("option"); o.value=m; return o; }));
-  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!fe || (fe==="__nenhum" ? !(r.env||"").trim() : (r.env||"").trim()===fe)) && (!q || norm(r.c1+" "+r.c2+" "+r.obs+" "+(r.env||"")).includes(q))));
+  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!fc || r.cat===fc) && (!fe || (fe==="__nenhum" ? !(r.env||"").trim() : (r.env||"").trim()===fe)) && (!q || norm(r.c1+" "+r.c2+" "+r.obs+" "+(r.env||"")).includes(q))));
   const ul=$("list"); ul.replaceChildren();
   $("msg").hidden = vis.length>0; if(!vis.length) $("msg").textContent = rows.length ? "Ninguém corresponde a esta pesquisa." : "Ainda não há convidados.";
   for(const r of vis){
-    const li=document.createElement("li"); li.className="row";
+    const li=document.createElement("li"); li.className="row"+(r.sit===NF?" nf":"");
     const who=document.createElement("button"); who.type="button"; who.className="who";
     const st=document.createElement("strong"); st.textContent = r.c2 ? `${r.c1} & ${r.c2}` : r.c1;
-    const sm=document.createElement("small"); sm.textContent = [r.cat, `${pessoas(r)} ${pessoas(r)===1?"pessoa":"pessoas"}`, r.env ? `envia: ${r.env}` : "", r.obs].filter(Boolean).join(" · ");
+    const sm=document.createElement("small"); sm.textContent = [`${pessoas(r)} ${pessoas(r)===1?"pessoa":"pessoas"}`, r.env ? `envia: ${r.env}` : "", r.obs].filter(Boolean).join(" · ");
     const tags=document.createElement("span"); tags.className="tags";
+    if(r.cat==="Tios"){ const t=document.createElement("span"); t.className="tag tio"; t.textContent="Tios"; tags.appendChild(t); }
     [["Save the date", r.std], ["Convite", r.conv]].forEach(([t,v])=>{ const g=document.createElement("span"); g.className="tag"+(v==="Sim"?" on":""); g.textContent = (v==="Sim"?"✓ ":"✗ ")+t; tags.appendChild(g); });
     who.append(st, sm, tags); who.onclick=()=>abrir(r); who.disabled=!podeEditar;
     const pill=document.createElement("button"); pill.type="button"; pill.className="pill "+cls(r.sit); pill.textContent=r.sit;
@@ -353,7 +366,7 @@ $("evSave").onclick = async () => {
   try{ await setDoc(doc(db,"config","evento"), d); toast("Dados do convite guardados"); } catch(e){ toast("Não foi possível guardar"); }
 };
 $("addBtn").onclick=()=>abrir(null);
-$("q").oninput=render; $("fEnv").onchange=render;
+$("q").oninput=render; $("fEnv").onchange=render; $("fCat").onchange=render;
 $("form").onsubmit = async e => {
   e.preventDefault();
   const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, cat:$("f-cat").value, obs:$("f-obs").value.trim(), std:$("f-std").checked?"Sim":"Não", conv:$("f-conv").checked?"Sim":"Não", env:$("f-env").value.trim(), atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
