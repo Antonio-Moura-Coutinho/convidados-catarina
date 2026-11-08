@@ -113,7 +113,6 @@ input,select,textarea{padding:11px 12px;border-radius:10px;border:1px solid var(
       <div class="stat"><b id="st-total">–</b><span>pessoas</span></div>
       <div class="stat"><b id="st-ok">–</b><span>confirmadas</span></div>
       <div class="stat"><b id="st-wait">–</b><span>a confirmar</span></div>
-      <div class="stat"><b id="st-dec">–</b><span>por decidir</span></div>
       <div class="stat"><b id="st-no">–</b><span>não vão</span></div>
       <div class="stat"><b id="st-std">–</b><span>save the date enviados</span></div>
       <div class="stat"><b id="st-conv">–</b><span>convites enviados</span></div>
@@ -218,7 +217,7 @@ const app = initializeApp({
 });
 const auth = getAuth(app), db = getFirestore(app);
 const DONOS = ["antonio.coutinho@improvebytech.com", "tonitrigueiros@gmail.com"];
-const ORDEM = ["Confirmado","A confirmar","Não sei","Dúvida","Não vai"];
+const ORDEM = ["Confirmado","A confirmar","Não vai"];
 const cls = s => "s-" + s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-");
 const norm = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const $ = id => document.getElementById(id);
@@ -289,7 +288,7 @@ function render(){
   const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
   $("st-total").textContent = rows.reduce((a,r)=>a+pessoas(r),0);
   $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
-  $("st-dec").textContent = sum("Não sei") + sum("Dúvida"); $("st-no").textContent = sum("Não vai");
+  $("st-no").textContent = sum("Não vai");
   $("st-std").textContent = rows.filter(r=>r.std==="Sim").length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim").length;
   const q = norm($("q").value.trim()), fe = $("fEnv").value;
   const membros = [...new Set(rows.map(r=>(r.env||"").trim()).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b)));
