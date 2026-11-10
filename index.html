@@ -296,7 +296,7 @@ let evento = {}, convAtual = null, convBlob = null;
 const EVK = ["data","hora","local","morada","traje","rsvpAte","rsvpContacto","stdDia","stdData","stdHora","msgPlural","msgSingular"];
 const EVDEF = {stdDia:"Terça-feira", stdData:"24 · Novembro · 2026", stdHora:"Das 18h00 às 24h00",
   msgPlural:"Olá! Sou o António, filho da Catarina.\n\nEstou a organizar os 50 anos da mãe e, como fizeram parte desta história, envio-vos este save the date: terça-feira, 24 de novembro, das 18h00 às 24h00, em Lisboa, perto das Amoreiras.\n\nO convite segue em breve. Se já souberem de antemão que não vão poder vir, peço que me avisem até sexta-feira, dia 13.\n\nObrigado! 🥂",
-  msgSingular:"Olá! Sou o António, filho da Catarina.\n\nEstou a organizar os 50 anos da mãe e, como fizeste parte desta história, envio-te este save the date: terça-feira, 24 de novembro, das 18h00 às 24h00, em Lisboa, perto das Amoreiras.\n\nO convite segue em breve. Se já souberes de antemão que não vais poder vir, peço que me avises até sexta-feira, dia 13.\n\nObrigado! 🥂"};
+  msgSingular:"Olá! Sou o António, filho da Catarina.\n\nEstou a organizar os 50 anos da mãe e, como fez parte desta história, envio-lhe este save the date: terça-feira, 24 de novembro, das 18h00 às 24h00, em Lisboa, perto das Amoreiras.\n\nO convite segue em breve. Se já souber de antemão que não vai poder vir, peço que me avise até sexta-feira, dia 13.\n\nObrigado! 🥂"};
 let tipoAtual = "conv";
 const mensagemSTD = r => ((r.c2||"").trim() ? (evento.msgPlural||EVDEF.msgPlural) : (evento.msgSingular||EVDEF.msgSingular));
 async function desenharSTD(r){
