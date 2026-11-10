@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Cormorant+SC:wght@600&family=Pinyon+Script&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Cormorant+SC:wght@500;600&family=Pinyon+Script&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -203,6 +203,15 @@ h2[tabindex="-1"]:focus{outline:none}
         <label>R.S.V.P. até<input id="ev-rsvpAte" placeholder="30 de novembro"></label>
         <label>Confirmações para<input id="ev-rsvpContacto" placeholder="Catarina · 91x xxx xxx"></label>
       </div>
+      <h2 style="margin-top:16px">Save the date</h2>
+      <p class="small">Texto da imagem e mensagens enviadas com o botão “Enviar save the date”. A versão para casais/famílias usa-se quando o convidado tem acompanhante.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <label>Dia da semana<input id="ev-stdDia" placeholder="Terça-feira"></label>
+        <label>Data<input id="ev-stdData" placeholder="24 · Novembro · 2026"></label>
+        <label>Horário<input id="ev-stdHora" placeholder="Das 18h00 às 24h00"></label>
+      </div>
+      <label style="margin-top:10px">Mensagem para casais / famílias<textarea id="ev-msgPlural" rows="7"></textarea></label>
+      <label style="margin-top:10px">Mensagem para uma pessoa<textarea id="ev-msgSingular" rows="7"></textarea></label>
       <button class="btn main" id="evSave" type="button" style="margin-top:10px">Guardar dados do convite</button>
       <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
       <p class="small">Importar do Excel: escolhe o ficheiro com a folha “Lista de convidados” (colunas Convidado 1, Convidado 2, Situação, Categoria, Observações). Substitui a lista atual.</p>
@@ -233,7 +242,10 @@ h2[tabindex="-1"]:focus{outline:none}
     <label>Enviado por (quem envia o convite)<input id="f-env" list="membros" autocomplete="off" placeholder="ex.: Mãe, António…"></label>
     <datalist id="membros"></datalist>
     <label>Observações<textarea id="f-obs" rows="2"></textarea></label>
-    <button class="btn" type="button" id="convBtn" style="border-color:var(--gold)">Gerar convite</button>
+    <div class="inline">
+      <button class="btn" type="button" id="stdBtn" style="flex:1 1 160px;border-color:#1f9e9a">Enviar save the date</button>
+      <button class="btn" type="button" id="convBtn" style="flex:1 1 160px;border-color:var(--gold)">Gerar convite</button>
+    </div>
     <div class="acts">
       <button class="btn del" type="button" id="delBtn">Apagar</button>
       <span style="display:flex;gap:8px">
@@ -247,10 +259,12 @@ h2[tabindex="-1"]:focus{outline:none}
 <dialog id="prev" aria-labelledby="prevTitle">
   <div class="sheet">
     <h2 id="prevTitle" tabindex="-1" autofocus>Convite</h2>
-    <img id="prevImg" alt="Pré-visualização do convite" style="width:100%;border-radius:8px;border:1px solid var(--line)">
+    <img id="prevImg" alt="Pré-visualização" style="width:100%;border-radius:8px;border:1px solid var(--line)">
+    <label id="prevMsgWrap" hidden>Mensagem que vai junto<textarea id="prevMsg" rows="7"></textarea></label>
     <div class="acts">
       <button class="btn" type="button" id="prevClose">Fechar</button>
       <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" type="button" id="prevCopy" hidden>Copiar mensagem</button>
         <button class="btn" type="button" id="prevDl">Descarregar</button>
         <button class="btn main" type="button" id="prevShare" hidden>Partilhar</button>
       </span>
@@ -279,7 +293,32 @@ const cls = s => "s-" + s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replac
 const norm = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const $ = id => document.getElementById(id);
 let evento = {}, convAtual = null, convBlob = null;
-const EVK = ["data","hora","local","morada","traje","rsvpAte","rsvpContacto"];
+const EVK = ["data","hora","local","morada","traje","rsvpAte","rsvpContacto","stdDia","stdData","stdHora","msgPlural","msgSingular"];
+const EVDEF = {stdDia:"Terça-feira", stdData:"24 · Novembro · 2026", stdHora:"Das 18h00 às 24h00",
+  msgPlural:"Olá! Sou o António, filho da Catarina.\n\nEstou a organizar os 50 anos da mãe e, como fizeram parte desta história, envio-vos este save the date: terça-feira, 24 de novembro, das 18h00 às 24h00, em Lisboa, perto das Amoreiras.\n\nO convite segue em breve. Se já souberem de antemão que não vão poder vir, peço que me avisem até sexta-feira, dia 13.\n\nObrigado! 🥂",
+  msgSingular:"Olá! Sou o António, filho da Catarina.\n\nEstou a organizar os 50 anos da mãe e, como fizeste parte desta história, envio-te este save the date: terça-feira, 24 de novembro, das 18h00 às 24h00, em Lisboa, perto das Amoreiras.\n\nO convite segue em breve. Se já souberes de antemão que não vais poder vir, peço que me avises até sexta-feira, dia 13.\n\nObrigado! 🥂"};
+let tipoAtual = "conv";
+const mensagemSTD = r => ((r.c2||"").trim() ? (evento.msgPlural||EVDEF.msgPlural) : (evento.msgSingular||EVDEF.msgSingular));
+async function desenharSTD(r){
+  try{ await Promise.all(['500 40px "Cormorant SC"','500 40px "Cormorant Garamond"'].map(f=>document.fonts.load(f))); }catch(e){}
+  const W=1080, H=1350, c=document.createElement("canvas"); c.width=W; c.height=H;
+  const x=c.getContext("2d"), PAPEL="#f8f3e6", TINTA="#1b2340", MOLD="#1f9e9a";
+  const ev=k=>((evento[k]||"").trim()||EVDEF[k]);
+  x.fillStyle=PAPEL; x.fillRect(0,0,W,H);
+  x.strokeStyle=MOLD; x.lineWidth=4; x.strokeRect(36,36,W-72,H-72); x.lineWidth=2; x.strokeRect(49,49,W-98,H-98);
+  x.fillStyle=TINTA; x.textAlign="center"; x.textBaseline="middle";
+  const linha=(t,cy,font,sp,max=900)=>{ let size=parseFloat(font.match(/(\d+)px/)[1]); x.font=font; if("letterSpacing" in x) x.letterSpacing=sp*size+"px";
+    while(x.measureText(t).width>max && size>12){ size-=2; x.font=font.replace(/\d+px/, size+"px"); if("letterSpacing" in x) x.letterSpacing=sp*size+"px"; }
+    x.fillText(t, W/2 + ("letterSpacing" in x ? sp*size/2 : 0), cy); if("letterSpacing" in x) x.letterSpacing="0px"; };
+  linha("Save the Date", 328, '500 64px "Cormorant SC", Georgia, serif', 0.32);
+  linha("Catarina", 507, '500 120px "Cormorant Garamond", Georgia, serif', 0);
+  linha("50 anos", 608, '500 38px "Cormorant SC", Georgia, serif', 0.28);
+  linha(ev("stdDia"), 731, '500 34px "Cormorant SC", Georgia, serif', 0.28);
+  linha(ev("stdData"), 808, '500 76px "Cormorant Garamond", Georgia, serif', 0.04);
+  linha(ev("stdHora"), 885, '500 36px "Cormorant SC", Georgia, serif', 0.2);
+  if((r.c2||"").trim()){ x.globalAlpha=.75; linha("Válido para respetivo/a", 1222, '500 28px "Cormorant SC", Georgia, serif', 0.22); x.globalAlpha=1; }
+  return c;
+}
 const GENERICOS = {marido:"marido", mulher:"mulher", namorado:"namorado", namorada:"namorada"};
 const nomeConvite = r => { const c2=(r.c2||"").trim(); if(!c2) return r.c1; const g=GENERICOS[norm(c2)]; return g ? `${r.c1} e ${g}` : `${r.c1} & ${c2}`; };
 async function desenharConvite(r){
@@ -322,9 +361,10 @@ async function desenharConvite(r){
 }
 const nomeFicheiro = r => `Convite ${r.c1}`.replace(/[\\/:*?"<>|]+/g,"").trim() + ".png";
 async function marcarEnviado(){
-  if(!convAtual || convAtual.conv==="Sim") return;
-  if(!confirm(`Marcar o convite de ${convAtual.c1} como enviado?`)) return;
-  try{ await setDoc(doc(db,"convidados",convAtual.id), {conv:"Sim", atualizado:new Date().toISOString(), por:auth.currentUser?.email||""}, {merge:true}); toast("Marcado como enviado"); }
+  const campo = tipoAtual==="std" ? "std" : "conv", nome = tipoAtual==="std" ? "o save the date" : "o convite";
+  if(!convAtual || convAtual[campo]==="Sim") return;
+  if(!confirm(`Marcar ${nome} de ${convAtual.c1} como enviado?`)) return;
+  try{ await setDoc(doc(db,"convidados",convAtual.id), {[campo]:"Sim", atualizado:new Date().toISOString(), por:auth.currentUser?.email||""}, {merge:true}); toast("Marcado como enviado"); }
   catch(e){ toast("Não foi possível marcar"); }
 }
 let rows = [], filtro = "Todos", editId = null, sitSel = "A confirmar", unsubAdmin = null, acesso = [], podeEditar = false;
@@ -383,12 +423,12 @@ function abrir(r){
   editId = r ? r.id : null;
   $("dlgTitle").textContent = r ? "Editar convidado" : "Novo convidado";
   $("f-c1").value = r?.c1||""; $("f-c2").value = r?.c2||""; $("f-cat").value = r?.cat||"Convidados"; $("f-obs").value = r?.obs||""; $("f-std").checked = r?.std==="Sim"; $("f-env").value = r?.env||""; $("f-conv").checked = r?.conv==="Sim";
-  sitSel = r?.sit || "A confirmar"; renderSitOpts(); $("delBtn").hidden = !r; $("convBtn").hidden = !r; $("dlg").showModal();
+  sitSel = r?.sit || "A confirmar"; renderSitOpts(); $("delBtn").hidden = !r; $("convBtn").hidden = !r; $("stdBtn").hidden = !r; $("dlg").showModal();
 }
 $("cancelBtn").onclick=()=>$("dlg").close();
 $("convBtn").onclick = async () => {
   const r = rows.find(x=>x.id===editId); if(!r) return;
-  convAtual = r; $("prevTitle").textContent = `Convite · ${nomeConvite(r)}`;
+  convAtual = r; tipoAtual = "conv"; $("prevTitle").textContent = `Convite · ${nomeConvite(r)}`; $("prevMsgWrap").hidden = true; $("prevCopy").hidden = true;
   const c = await desenharConvite(r);
   convBlob = await new Promise(res=>c.toBlob(res,"image/png"));
   $("prevImg").src = URL.createObjectURL(convBlob);
@@ -396,13 +436,34 @@ $("convBtn").onclick = async () => {
   $("prevShare").hidden = !(navigator.canShare && navigator.canShare({files:[f]}));
   $("dlg").close(); $("prev").showModal();
 };
+$("stdBtn").onclick = async () => {
+  const r = rows.find(x=>x.id===editId); if(!r) return;
+  convAtual = r; tipoAtual = "std"; $("prevTitle").textContent = `Save the date · ${nomeConvite(r)}`;
+  const c = await desenharSTD(r);
+  convBlob = await new Promise(res=>c.toBlob(res,"image/png"));
+  $("prevImg").src = URL.createObjectURL(convBlob);
+  $("prevMsg").value = mensagemSTD(r); $("prevMsgWrap").hidden = false; $("prevCopy").hidden = false;
+  const f = new File([convBlob], "Save the date.png", {type:"image/png"});
+  $("prevShare").hidden = !(navigator.canShare && navigator.canShare({files:[f]}));
+  $("dlg").close(); $("prev").showModal();
+};
+$("prevCopy").onclick = async () => { try{ await navigator.clipboard.writeText($("prevMsg").value); toast("Mensagem copiada"); } catch(e){ $("prevMsg").select(); toast("Selecione e copie o texto"); } };
 $("prevClose").onclick = () => $("prev").close();
 $("prevDl").onclick = async () => {
-  if(!convBlob) return; const a=document.createElement("a"); a.href=URL.createObjectURL(convBlob); a.download=nomeFicheiro(convAtual); a.click();
+  if(!convBlob) return; const a=document.createElement("a"); a.href=URL.createObjectURL(convBlob); a.download = tipoAtual==="std" ? "Save the date.png" : nomeFicheiro(convAtual); a.click();
   setTimeout(marcarEnviado, 600);
 };
 $("prevShare").onclick = async () => {
-  try{ await navigator.share({files:[new File([convBlob], nomeFicheiro(convAtual), {type:"image/png"})], title:"Convite · 50 anos da Catarina"}); await marcarEnviado(); }
+  try{
+    if(tipoAtual==="std"){
+      const msg = $("prevMsg").value;
+      try{ await navigator.clipboard.writeText(msg); }catch(e){}
+      await navigator.share({files:[new File([convBlob], "Save the date.png", {type:"image/png"})], text: msg});
+    } else {
+      await navigator.share({files:[new File([convBlob], nomeFicheiro(convAtual), {type:"image/png"})], title:"Convite · 50 anos da Catarina"});
+    }
+    await marcarEnviado();
+  }
   catch(e){ if(e?.name!=="AbortError") toast("Não foi possível partilhar"); }
 };
 $("evSave").onclick = async () => {
@@ -500,7 +561,7 @@ onSnapshot(collection(db,"convidados"), snap => {
   $("xlBtn").hidden = false; render();
 }, () => { $("msg").hidden = false; $("msg").textContent = "Não foi possível carregar a lista."; });
 
-onSnapshot(doc(db,"config","evento"), s => { evento = (s.exists() && s.data()) || {}; EVK.forEach(k=>{ const el=$("ev-"+k); if(el && document.activeElement!==el) el.value = evento[k]||""; }); }, () => {});
+onSnapshot(doc(db,"config","evento"), s => { evento = (s.exists() && s.data()) || {}; EVK.forEach(k=>{ const el=$("ev-"+k); if(el && document.activeElement!==el) el.value = evento[k]||EVDEF[k]||""; }); }, () => {});
 
 onAuthStateChanged(auth, async user => {
   if(unsubAdmin){ unsubAdmin(); unsubAdmin = null; }
