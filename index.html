@@ -336,10 +336,10 @@ async function desenharConvite(r){
   const {c,x,W,linha}=cartao();
   linha("Catarina", 215, `500 112px ${FG}`);
   linha("50 anos", 310, `500 36px ${FS}`, 0.28);
-  linha("tem o prazer de convidar", 420, `italic 500 40px ${FG}`);
+  linha("tenho o gosto de convidar", 420, `italic 500 40px ${FG}`);
   linha(nomeConvite(r), 515, `500 58px ${FG}`, 0, {max:760});
   x.strokeStyle="#1f9e9a"; x.lineWidth=1.5; x.beginPath(); x.moveTo(W/2-380,557); x.lineTo(W/2+380,557); x.stroke();
-  linha("para celebrar este dia", 604, `italic 500 40px ${FG}`);
+  linha("para festejar este dia", 604, `italic 500 40px ${FG}`);
   linha(evv("stdDia"), 711, `500 32px ${FS}`, 0.28);
   linha(evv("stdData"), 780, `500 68px ${FG}`, 0.04);
   linha(evv("stdHora"), 850, `500 34px ${FS}`, 0.2);
