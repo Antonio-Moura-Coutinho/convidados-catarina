@@ -69,6 +69,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .chip.s-Nao-faz-sentido-convidar[aria-pressed="true"]{background:var(--nf-bg);color:var(--nf);border-color:var(--nf)}
 .row.nf{opacity:.72}
 #st-ok{color:var(--ok)} #st-wait{color:var(--wait)} #st-no{color:var(--no)} #st-nf{color:var(--nf)}
+.tag.vem{background:var(--ok-bg);color:var(--ok);border-color:transparent;font-weight:600}
 .tag.tio{background:var(--tio-bg);color:var(--tio);border-color:transparent;font-weight:600}
 .empty,.msg{text-align:center;color:var(--muted);padding:28px 8px}
 .add{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;min-height:48px}
@@ -128,6 +129,7 @@ h2[tabindex="-1"]:focus{outline:none}
   .filtros{gap:6px}
   .filtros .search{flex:1 1 100%;padding:10px 12px}
   .filtros select{flex:1 1 calc(50% - 3px);min-width:0;padding:10px 8px;font-size:14px}
+  #fEnvio{flex-basis:100%}
   .chips{margin:0 -12px;padding:0 12px 2px;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
   .chip{padding:6px 11px;font-size:13px;min-height:36px}
@@ -178,6 +180,7 @@ h2[tabindex="-1"]:focus{outline:none}
         <input class="search" id="q" type="search" placeholder="Procurar nome…" aria-label="Procurar nome">
         <select id="fCat" aria-label="Filtrar por categoria"><option value="">Todas as categorias</option><option value="Convidados">Convidados</option><option value="Tios">Tios</option></select>
         <select id="fEnv" aria-label="Filtrar por quem envia"><option value="">Todos os que enviam</option></select>
+        <select id="fEnvio" aria-label="Filtrar por envio"><option value="">Todos os envios</option></select>
       </div>
       <div class="chips" id="chips" role="group" aria-label="Filtrar por situação"></div>
     </div>
@@ -232,6 +235,10 @@ h2[tabindex="-1"]:focus{outline:none}
     <div>
       <span style="font-size:13px;color:var(--muted)">Situação</span>
       <div class="opts" id="f-sit" role="group" aria-label="Situação"></div>
+    </div>
+    <div id="f-vemWrap" hidden>
+      <span style="font-size:13px;color:var(--muted)">Vem como?</span>
+      <div class="opts" id="f-vem" role="group" aria-label="Vem sozinho ou com +1"></div>
     </div>
     <label>Categoria
       <select id="f-cat"><option>Convidados</option><option>Tios</option></select>
@@ -364,7 +371,11 @@ async function marcarEnviado(){
 let rows = [], filtro = "Todos", editId = null, sitSel = "A confirmar", unsubAdmin = null, acesso = [], podeEditar = false;
 
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2000); }
-const pessoas = r => (r.c1?1:0) + (r.c2?1:0);
+const pessoas = r => { if(r.sit==="Confirmado" && r.vem==="sozinho") return 1; if(r.sit==="Confirmado" && r.vem==="+1") return 2; return (r.c1?1:0) + (r.c2?1:0); };
+let vemSel = "";
+const ENVIOS = [["conv-sim","Convite enviado"],["conv-nao","Convite por enviar"],["std-sim","Save the date enviado"],["std-nao","Save the date por enviar"]];
+const passaEnvio = (r,f) => { if(!f) return true; const [t,v]=f.split("-"); const campo = t==="conv" ? r.conv : r.std;
+  return v==="sim" ? campo==="Sim" : (campo!=="Sim" && r.sit!==NF && r.sit!=="Não vai"); };
 const ordenar = a => [...a].sort((x,y)=> (ORDEM.indexOf(x.sit)-ORDEM.indexOf(y.sit)) || norm(x.c1).localeCompare(norm(y.c1)));
 
 const CURTO = {"Não faz sentido convidar":"Não convidar"};
@@ -383,11 +394,12 @@ function render(){
   $("st-ok").textContent = sum("Confirmado"); $("st-wait").textContent = sum("A confirmar");
   $("st-no").textContent = sum("Não vai"); $("st-nf").textContent = sum(NF);
   $("st-std").textContent = rows.filter(r=>r.std==="Sim"&&r.sit!==NF).length; $("st-conv").textContent = rows.filter(r=>r.conv==="Sim"&&r.sit!==NF).length;
-  const q = norm($("q").value.trim()), fe = $("fEnv").value, fc = $("fCat").value;
+  const q = norm($("q").value.trim()), fe = $("fEnv").value, fc = $("fCat").value, fv = $("fEnvio").value;
+  const sv = $("fEnvio"); sv.replaceChildren(new Option("Todos os envios",""), ...ENVIOS.map(([k,t])=>new Option(`${t} (${rows.filter(r=>passaEnvio(r,k)).length})`, k))); sv.value = fv;
   const membros = [...new Set(rows.map(r=>(r.env||"").trim()).filter(Boolean))].sort((a,b)=>norm(a).localeCompare(norm(b)));
   const sel = $("fEnv"); sel.replaceChildren(new Option("Todos os que enviam", ""), new Option("Sem ninguém atribuído", "__nenhum"), ...membros.map(m=>new Option(m, m))); sel.value = fe;
   $("membros").replaceChildren(...membros.map(m=>{ const o=document.createElement("option"); o.value=m; return o; }));
-  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!fc || r.cat===fc) && (!fe || (fe==="__nenhum" ? !(r.env||"").trim() : (r.env||"").trim()===fe)) && (!q || norm(r.c1+" "+r.c2+" "+r.obs+" "+(r.env||"")).includes(q))));
+  const vis = ordenar(rows.filter(r => (filtro==="Todos"||r.sit===filtro) && (!fc || r.cat===fc) && passaEnvio(r,fv) && (!fe || (fe==="__nenhum" ? !(r.env||"").trim() : (r.env||"").trim()===fe)) && (!q || norm(r.c1+" "+r.c2+" "+r.obs+" "+(r.env||"")).includes(q))));
   const ul=$("list"); ul.replaceChildren();
   $("msg").hidden = vis.length>0; if(!vis.length) $("msg").textContent = rows.length ? "Ninguém corresponde a esta pesquisa." : "Ainda não há convidados.";
   for(const r of vis){
@@ -397,6 +409,7 @@ function render(){
     const sm=document.createElement("small"); sm.textContent = [`${pessoas(r)} ${pessoas(r)===1?"pessoa":"pessoas"}`, r.env ? `envia: ${r.env}` : "", r.obs].filter(Boolean).join(" · ");
     const tags=document.createElement("span"); tags.className="tags";
     if(r.cat==="Tios"){ const t=document.createElement("span"); t.className="tag tio"; t.textContent="Tios"; tags.appendChild(t); }
+    if(r.sit==="Confirmado" && r.vem){ const t=document.createElement("span"); t.className="tag vem"; t.textContent = r.vem==="+1" ? "Vem com +1" : "Vem sozinho/a"; tags.appendChild(t); }
     [["Save the date", r.std], ["Convite", r.conv]].forEach(([t,v])=>{ const g=document.createElement("span"); g.className="tag"+(v==="Sim"?" on":""); g.textContent = (v==="Sim"?"✓ ":"✗ ")+t; tags.appendChild(g); });
     who.append(st, sm, tags); who.onclick=()=>abrir(r); who.disabled=!podeEditar;
     const pill=document.createElement("button"); pill.type="button"; pill.className="pill "+cls(r.sit); rotulo(pill, r.sit);
@@ -408,8 +421,14 @@ function renderSitOpts(){
   const box=$("f-sit"); box.replaceChildren();
   ORDEM.forEach(s=>{
     const b=document.createElement("button"); b.type="button"; b.className="opt "+cls(s); b.textContent=s;
-    b.setAttribute("aria-pressed", String(sitSel===s)); b.onclick=()=>{ sitSel=s; renderSitOpts(); };
+    b.setAttribute("aria-pressed", String(sitSel===s)); b.onclick=()=>{ sitSel=s; if(s==="Confirmado" && !vemSel) vemSel = $("f-c2").value.trim() ? "+1" : "sozinho"; renderSitOpts(); };
     box.appendChild(b);
+  });
+  $("f-vemWrap").hidden = sitSel!=="Confirmado";
+  const vb=$("f-vem"); vb.replaceChildren();
+  [["sozinho","Vem sozinho/a"],["+1","Vem com +1"]].forEach(([k,t])=>{
+    const b=document.createElement("button"); b.type="button"; b.className="opt s-Confirmado"; b.textContent=t;
+    b.setAttribute("aria-pressed", String(vemSel===k)); b.onclick=()=>{ vemSel=k; renderSitOpts(); }; vb.appendChild(b);
   });
 }
 function abrir(r){
@@ -417,7 +436,7 @@ function abrir(r){
   editId = r ? r.id : null;
   $("dlgTitle").textContent = r ? "Editar convidado" : "Novo convidado";
   $("f-c1").value = r?.c1||""; $("f-c2").value = r?.c2||""; $("f-cat").value = r?.cat||"Convidados"; $("f-obs").value = r?.obs||""; $("f-std").checked = r?.std==="Sim"; $("f-env").value = r?.env||""; $("f-conv").checked = r?.conv==="Sim";
-  sitSel = r?.sit || "A confirmar"; renderSitOpts(); $("delBtn").hidden = !r; $("convBtn").hidden = !r; $("stdBtn").hidden = !r; $("dlg").showModal();
+  sitSel = r?.sit || "A confirmar"; vemSel = r?.vem || ""; if(sitSel==="Confirmado" && !vemSel) vemSel = (r?.c2||"").trim() ? "+1" : "sozinho"; renderSitOpts(); $("delBtn").hidden = !r; $("convBtn").hidden = !r; $("stdBtn").hidden = !r; $("dlg").showModal();
 }
 $("cancelBtn").onclick=()=>$("dlg").close();
 $("convBtn").onclick = async () => {
@@ -465,10 +484,10 @@ $("evSave").onclick = async () => {
   try{ await setDoc(doc(db,"config","evento"), d); toast("Dados do convite guardados"); } catch(e){ toast("Não foi possível guardar"); }
 };
 $("addBtn").onclick=()=>abrir(null);
-$("q").oninput=render; $("fEnv").onchange=render; $("fCat").onchange=render;
+$("q").oninput=render; $("fEnv").onchange=render; $("fCat").onchange=render; $("fEnvio").onchange=render;
 $("form").onsubmit = async e => {
   e.preventDefault();
-  const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, cat:$("f-cat").value, obs:$("f-obs").value.trim(), std:$("f-std").checked?"Sim":"Não", conv:$("f-conv").checked?"Sim":"Não", env:$("f-env").value.trim(), atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
+  const data = { c1:$("f-c1").value.trim(), c2:$("f-c2").value.trim(), sit:sitSel, vem: sitSel==="Confirmado" ? vemSel : "", cat:$("f-cat").value, obs:$("f-obs").value.trim(), std:$("f-std").checked?"Sim":"Não", conv:$("f-conv").checked?"Sim":"Não", env:$("f-env").value.trim(), atualizado:new Date().toISOString(), por: auth.currentUser?.email||"" };
   if(!data.c1) return;
   try{ editId ? await setDoc(doc(db,"convidados",editId), data) : await addDoc(collection(db,"convidados"), data); $("dlg").close(); toast("Guardado"); }
   catch(err){ toast("Não foi possível guardar"); }
@@ -480,20 +499,21 @@ $("delBtn").onclick = async () => {
 
 $("xlBtn").onclick = () => {
   const ord = ordenar(rows), N = 1000;
-  const lista = [["Convidado 1","Convidado 2","Situação","Categoria","Save the date","Convite enviado","Enviado por","Observações","Total pessoas"]];
-  ord.forEach((r,i)=> lista.push([r.c1, r.c2||"", r.sit, r.cat, r.std||"Não", r.conv||"Não", r.env||"", r.obs||"", {t:"n", v:pessoas(r), f:`SUMPRODUCT(--(LEN(A${i+2}:B${i+2})>0))`}]));
+  const lista = [["Convidado 1","Convidado 2","Situação","Vem","Categoria","Save the date","Convite enviado","Enviado por","Observações","Total pessoas"]];
+  ord.forEach((r,i)=>{ const n=i+2; lista.push([r.c1, r.c2||"", r.sit, r.sit==="Confirmado" ? (r.vem||"") : "", r.cat, r.std||"Não", r.conv||"Não", r.env||"", r.obs||"",
+    {t:"n", v:pessoas(r), f:`IF(AND(C${n}="Confirmado",D${n}="sozinho"),1,IF(AND(C${n}="Confirmado",D${n}="+1"),2,SUMPRODUCT(--(LEN(A${n}:B${n})>0))))`}]); });
   const ws1 = XLSX.utils.aoa_to_sheet(lista);
-  ws1["!cols"] = [{wch:26},{wch:24},{wch:14},{wch:13},{wch:13},{wch:14},{wch:16},{wch:30},{wch:12}];
-  ws1["!autofilter"] = {ref:`A1:I${ord.length+1}`};
+  ws1["!cols"] = [{wch:26},{wch:24},{wch:14},{wch:9},{wch:13},{wch:13},{wch:14},{wch:16},{wch:30},{wch:12}];
+  ws1["!autofilter"] = {ref:`A1:J${ord.length+1}`};
   const L = "'Lista de convidados'!", R = c => `${L}$${c}$2:$${c}$${N}`;
   const sum = s => rows.filter(r=>r.sit===s).reduce((a,r)=>a+pessoas(r),0);
   const som = [["Festa dos 50 anos da Catarina",""],["Indicador","Total"],
     ["Grupos / linhas",{t:"n",v:rows.length,f:`COUNTA(${R("A")})`}],
-    ["Total de pessoas a convidar",{t:"n",v:rows.filter(r=>r.sit!==NF).reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("I")})-SUMIF(${R("C")},"${NF}",${R("I")})`}],
-    ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("I")})`}]),
+    ["Total de pessoas a convidar",{t:"n",v:rows.filter(r=>r.sit!==NF).reduce((a,r)=>a+pessoas(r),0),f:`SUM(${R("J")})-SUMIF(${R("C")},"${NF}",${R("J")})`}],
+    ...ORDEM.map(s=>[s,{t:"n",v:sum(s),f:`SUMIF(${R("C")},"${s}",${R("J")})`}]),
     ["Prováveis (confirmados + a confirmar)",{t:"n",v:sum("Confirmado")+sum("A confirmar"),f:"B5+B6"}],
-    ["Save the date enviados (grupos)",{t:"n",v:rows.filter(r=>r.std==="Sim").length,f:`COUNTIF(${R("E")},"Sim")`}],
-    ["Convites enviados (grupos)",{t:"n",v:rows.filter(r=>r.conv==="Sim").length,f:`COUNTIF(${R("F")},"Sim")`}],
+    ["Save the date enviados (grupos)",{t:"n",v:rows.filter(r=>r.std==="Sim").length,f:`COUNTIF(${R("F")},"Sim")`}],
+    ["Convites enviados (grupos)",{t:"n",v:rows.filter(r=>r.conv==="Sim").length,f:`COUNTIF(${R("G")},"Sim")`}],
     ["",""],["Exportado em", new Date().toLocaleString("pt-PT")]];
   const ws2 = XLSX.utils.aoa_to_sheet(som); ws2["!cols"]=[{wch:40},{wch:14}];
   const wb = XLSX.utils.book_new();
@@ -530,7 +550,7 @@ $("importFile").onchange = async ev => {
     const novos = linhas.map(l=>({ c1:limpa(l["Convidado 1"]), c2:limpa(l["Convidado 2"]),
       sit: ORDEM.includes(limpa(l["Situação"])) ? limpa(l["Situação"]) : "A confirmar",
       cat: limpa(l["Categoria"])==="Tios" ? "Tios" : "Convidados", obs: limpa(l["Observações"]),
-      std: limpa(l["Save the date"])==="Sim" ? "Sim" : "Não", conv: limpa(l["Convite enviado"])==="Sim" ? "Sim" : "Não", env: limpa(l["Enviado por"]) }))
+      std: limpa(l["Save the date"])==="Sim" ? "Sim" : "Não", conv: limpa(l["Convite enviado"])==="Sim" ? "Sim" : "Não", env: limpa(l["Enviado por"]), vem: ["+1","sozinho"].includes(limpa(l["Vem"])) ? limpa(l["Vem"]) : "" }))
       .map(r=> r.c1 ? r : {...r, c1:r.c2, c2:""}).filter(r=>r.c1);
     if(!novos.length){ toast("Não encontrei convidados no ficheiro"); return; }
     if(!confirm(`Importar ${novos.length} linhas e substituir a lista atual (${rows.length} linhas)?`)) return;
@@ -551,7 +571,7 @@ $("logout").onclick = () => signOut(auth);
 renderChips();
 
 onSnapshot(collection(db,"convidados"), snap => {
-  rows = snap.docs.map(d=>({id:d.id, c1:"", c2:"", sit:"A confirmar", cat:"Convidados", obs:"", std:"Não", conv:"Não", env:"", ...d.data()}));
+  rows = snap.docs.map(d=>({id:d.id, c1:"", c2:"", sit:"A confirmar", cat:"Convidados", obs:"", std:"Não", conv:"Não", env:"", vem:"", ...d.data()}));
   $("xlBtn").hidden = false; render();
 }, () => { $("msg").hidden = false; $("msg").textContent = "Não foi possível carregar a lista."; });
 
